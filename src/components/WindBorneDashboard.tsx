@@ -57,7 +57,9 @@ const WindBorneDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch data directly from the remote endpoint using AllOrigins as a proxy.
+  // Attempt to fetch live data using a public CORS proxy.
+  // (If the remote server still denies access due to CORS or authorization issues,
+  //  the catch block falls back to using SAMPLE_DATA.)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,16 +67,15 @@ const WindBorneDashboard = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
-        // Use AllOrigins to bypass CORS restrictions.
         const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
+        // Using AllOrigins (a public proxy) to bypass CORS restrictions.
+        // Note: Public proxies are for testing only.
         const proxyUrl =
           "https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=";
-        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-          signal: controller.signal,
-          headers: {
-            "Accept": "application/json",
-          },
-        });
+        const response = await fetch(
+          proxyUrl + encodeURIComponent(targetUrl),
+          { signal: controller.signal }
+        );
 
         clearTimeout(timeoutId);
 
@@ -84,18 +85,14 @@ const WindBorneDashboard = () => {
 
         // AllOrigins returns a JSON with a "contents" field containing the fetched data.
         const allOriginsData = await response.json();
-        // Parse the contents field to get the actual JSON data.
+        // Parse the "contents" field (which is a JSON string) to obtain the actual data.
         const data: BalloonData[] = JSON.parse(allOriginsData.contents);
 
         setConstellationData(formatData(data));
         setError(null);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Fetch error:", err);
-        if (err instanceof Error && err.name === "AbortError") {
-          setError("Connection timed out. Displaying sample data.");
-        } else {
-          setError("An error occurred. Displaying sample data.");
-        }
+        setError("Remote fetch failed (CORS/Authorization issue). Using sample data.");
         // Fallback to sample data
         setConstellationData(formatData(SAMPLE_DATA));
       } finally {
@@ -187,7 +184,9 @@ const WindBorneDashboard = () => {
         {/* Global Distribution Chart */}
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Global Distribution</CardTitle>
+            <CardTitle className="text-lg font-bold">
+              Global Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-96">
@@ -240,7 +239,9 @@ const WindBorneDashboard = () => {
         {/* Altitude Distribution Chart */}
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Altitude Distribution</CardTitle>
+            <CardTitle className="text-lg font-bold">
+              Altitude Distribution
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-96">
