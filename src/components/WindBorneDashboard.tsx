@@ -57,7 +57,7 @@ const WindBorneDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch data directly from the remote endpoint via a proxy.
+  // Fetch data directly from the remote endpoint using AllOrigins as a proxy.
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,10 +65,11 @@ const WindBorneDashboard = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
-        // Use a public proxy to bypass CORS restrictions.
-        const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
+        // Use AllOrigins to bypass CORS restrictions.
         const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
-        const response = await fetch(proxyUrl + targetUrl, {
+        const proxyUrl =
+          "https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=";
+        const response = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
           signal: controller.signal,
           headers: {
             "Accept": "application/json",
@@ -81,7 +82,11 @@ const WindBorneDashboard = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data: BalloonData[] = await response.json();
+        // AllOrigins returns a JSON with a "contents" field containing the fetched data.
+        const allOriginsData = await response.json();
+        // Parse the contents field to get the actual JSON data.
+        const data: BalloonData[] = JSON.parse(allOriginsData.contents);
+
         setConstellationData(formatData(data));
         setError(null);
       } catch (err) {
