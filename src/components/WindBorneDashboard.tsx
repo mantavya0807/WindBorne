@@ -56,7 +56,7 @@ const WindBorneDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch live data using a public proxy.
+  // Fetch live data using Thingproxy as a CORS proxy.
   // If the fetch fails (e.g. due to CORS/authorization issues), fall back to SAMPLE_DATA.
   useEffect(() => {
     const fetchData = async () => {
@@ -66,23 +66,24 @@ const WindBorneDashboard = () => {
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
         const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
-        // Use AllOrigins (a public proxy) to bypass CORS restrictions.
-        const proxyUrl =
-          "https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=";
-        const response = await fetch(
-          proxyUrl + encodeURIComponent(targetUrl),
-          { signal: controller.signal }
-        );
+        // Use Thingproxy to bypass CORS restrictions.
+        // Adding the "X-Requested-With" header may help avoid 401 errors.
+        const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
+        const response = await fetch(proxyUrl + targetUrl, {
+          signal: controller.signal,
+          headers: {
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
         clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // AllOrigins returns a JSON with a "contents" field containing the fetched data.
-        const allOriginsData = await response.json();
-        // Parse the "contents" field (a JSON string) to get the actual data.
-        const data: BalloonData[] = JSON.parse(allOriginsData.contents);
+        // Parse the JSON data directly (assuming the proxy returns the response body as-is).
+        const data: BalloonData[] = await response.json();
         setConstellationData(formatData(data));
         setError(null);
       } catch (err: unknown) {
@@ -190,9 +191,7 @@ const WindBorneDashboard = () => {
           <CardContent>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                >
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     type="number"
@@ -230,11 +229,7 @@ const WindBorneDashboard = () => {
                       );
                     }}
                   />
-                  <Scatter
-                    name="Balloons"
-                    data={constellationData}
-                    fill="#8884d8"
-                  />
+                  <Scatter name="Balloons" data={constellationData} fill="#8884d8" />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
@@ -251,9 +246,7 @@ const WindBorneDashboard = () => {
           <CardContent>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart
-                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                >
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     type="number"
@@ -288,11 +281,7 @@ const WindBorneDashboard = () => {
                       );
                     }}
                   />
-                  <Scatter
-                    name="Balloons"
-                    data={constellationData}
-                    fill="#82ca9d"
-                  />
+                  <Scatter name="Balloons" data={constellationData} fill="#82ca9d" />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
