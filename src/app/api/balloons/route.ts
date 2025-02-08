@@ -22,9 +22,11 @@ export async function GET() {
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
       },
     });
-  } catch (_) { // Using underscore to indicate intentionally unused parameter
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch data';
+    
     return new Response(
-      JSON.stringify({ error: 'Failed to fetch data' }), 
+      JSON.stringify({ error: errorMessage }), 
       { 
         status: 500,
         headers: {
