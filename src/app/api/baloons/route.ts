@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+// Fallback sample data (same type as [latitude, longitude, altitude])
 const SAMPLE_DATA: [number, number, number][] = [
   [-0.8234947986247869, 172.81706041445517, 3.6808595556242256],
   [50.813010401735646, 141.85201829486707, 3.369649522061529],
@@ -10,13 +11,20 @@ const SAMPLE_DATA: [number, number, number][] = [
 ];
 
 export async function GET() {
-  try {
-    const response = await fetch(
-      "https://a.windbornesystems.com/treasure/00.json"
-    );
+  const remoteUrl = "https://a.windbornesystems.com/treasure/00.json";
 
+  try {
+    const response = await fetch(remoteUrl);
+    // If the response is not OK (for example, 404), log and return fallback data.
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(
+        `HTTP error! status: ${response.status}. Using fallback sample data.`
+      );
+      return NextResponse.json(SAMPLE_DATA, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     const data = await response.json();
@@ -27,7 +35,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("Error fetching remote data:", error);
-    // Fallback to sample data if remote fetch fails.
     return NextResponse.json(SAMPLE_DATA, {
       headers: {
         "Access-Control-Allow-Origin": "*",

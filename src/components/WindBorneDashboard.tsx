@@ -21,7 +21,7 @@ import {
 import { Globe2, Wind, ArrowUp } from "lucide-react";
 
 // Define types for clarity
-type BalloonData = [number, number, number];
+type BalloonData = [number, number, number]; // [latitude, longitude, altitude]
 
 type FormattedBalloon = {
   id: number;
@@ -30,7 +30,7 @@ type FormattedBalloon = {
   altitude: number;
 };
 
-// Fallback sample data
+// Fallback sample data (used while waiting for API response)
 const SAMPLE_DATA: BalloonData[] = [
   [-0.8234947986247869, 172.81706041445517, 3.6808595556242256],
   [50.813010401735646, 141.85201829486707, 3.369649522061529],
@@ -40,7 +40,7 @@ const SAMPLE_DATA: BalloonData[] = [
   [-3.4126363322169935, 114.54269440305465, 9.604115072197002],
 ];
 
-// Helper function to format raw data
+// Helper function to format raw data into objects with id and named keys
 const formatData = (data: BalloonData[]): FormattedBalloon[] =>
   data.map((balloon, index) => ({
     id: index + 1,
@@ -56,14 +56,14 @@ const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch data from our API route (/api/balloons)
+  // Fetch data from our API route
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const response = await fetch("/api/balloons", {
           headers: {
-            "Accept": "application/json",
+            Accept: "application/json",
           },
         });
         if (!response.ok) {
