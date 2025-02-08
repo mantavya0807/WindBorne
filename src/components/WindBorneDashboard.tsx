@@ -41,14 +41,13 @@ const SAMPLE_DATA: BalloonData[] = [
 ];
 
 // Helper function to format raw data
-const formatData = (data: BalloonData[]): FormattedBalloon[] => {
-  return data.map((balloon, index) => ({
+const formatData = (data: BalloonData[]): FormattedBalloon[] =>
+  data.map((balloon, index) => ({
     id: index + 1,
     latitude: balloon[0],
     longitude: balloon[1],
     altitude: balloon[2],
   }));
-};
 
 const WindBorneDashboard = () => {
   const [constellationData, setConstellationData] = useState<FormattedBalloon[]>(
@@ -57,9 +56,8 @@ const WindBorneDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Attempt to fetch live data using a public CORS proxy.
-  // (If the remote server still denies access due to CORS or authorization issues,
-  //  the catch block falls back to using SAMPLE_DATA.)
+  // Fetch live data using a public proxy.
+  // If the fetch fails (e.g. due to CORS/authorization issues), fall back to SAMPLE_DATA.
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -68,15 +66,13 @@ const WindBorneDashboard = () => {
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
         const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
-        // Using AllOrigins (a public proxy) to bypass CORS restrictions.
-        // Note: Public proxies are for testing only.
+        // Use AllOrigins (a public proxy) to bypass CORS restrictions.
         const proxyUrl =
           "https://api.allorigins.hexocode.repl.co/get?disableCache=true&url=";
         const response = await fetch(
           proxyUrl + encodeURIComponent(targetUrl),
           { signal: controller.signal }
         );
-
         clearTimeout(timeoutId);
 
         if (!response.ok) {
@@ -85,14 +81,17 @@ const WindBorneDashboard = () => {
 
         // AllOrigins returns a JSON with a "contents" field containing the fetched data.
         const allOriginsData = await response.json();
-        // Parse the "contents" field (which is a JSON string) to obtain the actual data.
+        // Parse the "contents" field (a JSON string) to get the actual data.
         const data: BalloonData[] = JSON.parse(allOriginsData.contents);
-
         setConstellationData(formatData(data));
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Fetch error:", err);
-        setError("Remote fetch failed (CORS/Authorization issue). Using sample data.");
+        if (err instanceof Error && err.name === "AbortError") {
+          setError("Connection timed out. Displaying sample data.");
+        } else {
+          setError("An error occurred. Displaying sample data.");
+        }
         // Fallback to sample data
         setConstellationData(formatData(SAMPLE_DATA));
       } finally {
@@ -191,7 +190,9 @@ const WindBorneDashboard = () => {
           <CardContent>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <ScatterChart
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     type="number"
@@ -229,7 +230,11 @@ const WindBorneDashboard = () => {
                       );
                     }}
                   />
-                  <Scatter name="Balloons" data={constellationData} fill="#8884d8" />
+                  <Scatter
+                    name="Balloons"
+                    data={constellationData}
+                    fill="#8884d8"
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
@@ -246,7 +251,9 @@ const WindBorneDashboard = () => {
           <CardContent>
             <div className="h-96">
               <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                <ScatterChart
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     type="number"
@@ -281,7 +288,11 @@ const WindBorneDashboard = () => {
                       );
                     }}
                   />
-                  <Scatter name="Balloons" data={constellationData} fill="#82ca9d" />
+                  <Scatter
+                    name="Balloons"
+                    data={constellationData}
+                    fill="#82ca9d"
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
