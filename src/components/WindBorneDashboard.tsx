@@ -45,18 +45,33 @@ const WindBorneDashboard = () => {
       try {
         setLoading(true);
         
-        const response = await fetch('/api/balloons');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+        const response = await fetch('/api/balloons', {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
         
+        clearTimeout(timeoutId);
+    
         if (!response.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data: BalloonData[] = await response.json();
         setConstellationData(formatData(data));
         setError(null);
       } catch (err) {
-        console.log('Using sample data due to:', err instanceof Error ? err.message : 'Unknown error');
-        setError('Using sample data for demonstration purposes.');
+        console.error('Fetch error:', err);
+        // Don't show error to user if we're using sample data
+        if (err instanceof Error && err.name === 'AbortError') {
+          setError('Connection timed out. Using sample data.');
+        } else {
+          setError('Using sample data for demonstration.');
+        }
       } finally {
         setLoading(false);
       }
