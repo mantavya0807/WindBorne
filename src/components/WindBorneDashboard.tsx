@@ -21,7 +21,7 @@ import {
 import { Globe2, Wind, ArrowUp } from "lucide-react";
 
 // Define types for clarity
-type BalloonData = [number, number, number]; // [latitude, longitude, altitude]
+type BalloonData = [number, number, number];
 
 type FormattedBalloon = {
   id: number;
@@ -49,51 +49,32 @@ const formatData = (data: BalloonData[]): FormattedBalloon[] =>
     altitude: balloon[2],
   }));
 
-const WindBorneDashboard = () => {
+const Dashboard = () => {
   const [constellationData, setConstellationData] = useState<FormattedBalloon[]>(
     formatData(SAMPLE_DATA)
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch live data using Thingproxy as a CORS proxy.
-  // If the fetch fails (e.g. due to CORS/authorization issues), fall back to SAMPLE_DATA.
+  // Fetch data from our API route (/api/balloons)
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
-
-        const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
-        // Use Thingproxy to bypass CORS restrictions.
-        // Adding the "X-Requested-With" header may help avoid 401 errors.
-        const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
-        const response = await fetch(proxyUrl + targetUrl, {
-          signal: controller.signal,
+        const response = await fetch("/api/balloons", {
           headers: {
             "Accept": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
           },
         });
-        clearTimeout(timeoutId);
-
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
-        // Parse the JSON data directly (assuming the proxy returns the response body as-is).
         const data: BalloonData[] = await response.json();
         setConstellationData(formatData(data));
         setError(null);
-      } catch (err: unknown) {
+      } catch (err) {
         console.error("Fetch error:", err);
-        if (err instanceof Error && err.name === "AbortError") {
-          setError("Connection timed out. Displaying sample data.");
-        } else {
-          setError("An error occurred. Displaying sample data.");
-        }
-        // Fallback to sample data
+        setError("Failed to fetch live data. Displaying sample data.");
         setConstellationData(formatData(SAMPLE_DATA));
       } finally {
         setLoading(false);
@@ -101,12 +82,11 @@ const WindBorneDashboard = () => {
     };
 
     fetchData();
-    // Refresh data every 5 minutes
+    // Refresh data every 5 minutes (300,000 ms)
     const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate statistics based on the current data
   const stats = {
     totalBalloons: constellationData.length,
     avgAltitude:
@@ -140,8 +120,7 @@ const WindBorneDashboard = () => {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-bold">
-              <Globe2 className="h-6 w-6 text-indigo-600" />
-              Active Balloons
+              <Globe2 className="h-6 w-6 text-indigo-600" /> Active Balloons
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -154,8 +133,7 @@ const WindBorneDashboard = () => {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-bold">
-              <ArrowUp className="h-6 w-6 text-green-600" />
-              Average Altitude
+              <ArrowUp className="h-6 w-6 text-green-600" /> Average Altitude
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -168,8 +146,7 @@ const WindBorneDashboard = () => {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-bold">
-              <Wind className="h-6 w-6 text-red-600" />
-              Altitude Range
+              <Wind className="h-6 w-6 text-red-600" /> Altitude Range
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -292,4 +269,4 @@ const WindBorneDashboard = () => {
   );
 };
 
-export default WindBorneDashboard;
+export default Dashboard;
