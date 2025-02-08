@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -17,8 +17,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   ZAxis,
-} from 'recharts';
-import { Globe2, Wind, ArrowUp } from 'lucide-react';
+} from "recharts";
+import { Globe2, Wind, ArrowUp } from "lucide-react";
 
 // Define types for clarity
 type BalloonData = [number, number, number]; // [latitude, longitude, altitude]
@@ -51,11 +51,13 @@ const formatData = (data: BalloonData[]): FormattedBalloon[] => {
 };
 
 const WindBorneDashboard = () => {
-  const [constellationData, setConstellationData] = useState<FormattedBalloon[]>(formatData(SAMPLE_DATA));
+  const [constellationData, setConstellationData] = useState<FormattedBalloon[]>(
+    formatData(SAMPLE_DATA)
+  );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // Fetch data directly from the remote endpoint.
+  // Fetch data directly from the remote endpoint via a proxy.
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -63,10 +65,13 @@ const WindBorneDashboard = () => {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
 
-        const response = await fetch('https://a.windbornesystems.com/treasure/00.json', {
+        // Use a public proxy to bypass CORS restrictions.
+        const proxyUrl = "https://thingproxy.freeboard.io/fetch/";
+        const targetUrl = "https://a.windbornesystems.com/treasure/00.json";
+        const response = await fetch(proxyUrl + targetUrl, {
           signal: controller.signal,
           headers: {
-            'Accept': 'application/json',
+            "Accept": "application/json",
           },
         });
 
@@ -80,11 +85,11 @@ const WindBorneDashboard = () => {
         setConstellationData(formatData(data));
         setError(null);
       } catch (err) {
-        console.error('Fetch error:', err);
-        if (err instanceof Error && err.name === 'AbortError') {
-          setError('Connection timed out. Displaying sample data.');
+        console.error("Fetch error:", err);
+        if (err instanceof Error && err.name === "AbortError") {
+          setError("Connection timed out. Displaying sample data.");
         } else {
-          setError('An error occurred. Displaying sample data.');
+          setError("An error occurred. Displaying sample data.");
         }
         // Fallback to sample data
         setConstellationData(formatData(SAMPLE_DATA));
@@ -189,8 +194,8 @@ const WindBorneDashboard = () => {
                     dataKey="longitude"
                     domain={[-180, 180]}
                     label={{
-                      value: 'Longitude',
-                      position: 'insideBottomRight',
+                      value: "Longitude",
+                      position: "insideBottomRight",
                       offset: -10,
                     }}
                   />
@@ -199,14 +204,14 @@ const WindBorneDashboard = () => {
                     dataKey="latitude"
                     domain={[-90, 90]}
                     label={{
-                      value: 'Latitude',
+                      value: "Latitude",
                       angle: -90,
-                      position: 'insideLeft',
+                      position: "insideLeft",
                     }}
                   />
                   <ZAxis type="number" dataKey="altitude" range={[50, 400]} />
                   <Tooltip
-                    cursor={{ strokeDasharray: '3 3' }}
+                    cursor={{ strokeDasharray: "3 3" }}
                     content={({ payload }) => {
                       if (!payload || !payload[0]) return null;
                       const data = payload[0].payload as FormattedBalloon;
@@ -242,8 +247,8 @@ const WindBorneDashboard = () => {
                     dataKey="longitude"
                     domain={[-180, 180]}
                     label={{
-                      value: 'Longitude',
-                      position: 'insideBottomRight',
+                      value: "Longitude",
+                      position: "insideBottomRight",
                       offset: -10,
                     }}
                   />
@@ -251,13 +256,13 @@ const WindBorneDashboard = () => {
                     type="number"
                     dataKey="altitude"
                     label={{
-                      value: 'Altitude (km)',
+                      value: "Altitude (km)",
                       angle: -90,
-                      position: 'insideLeft',
+                      position: "insideLeft",
                     }}
                   />
                   <Tooltip
-                    cursor={{ strokeDasharray: '3 3' }}
+                    cursor={{ strokeDasharray: "3 3" }}
                     content={({ payload }) => {
                       if (!payload || !payload[0]) return null;
                       const data = payload[0].payload as FormattedBalloon;
