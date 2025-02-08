@@ -6,8 +6,18 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from 'recharts';
 import { Globe2, Wind, ArrowUp } from 'lucide-react';
 
+// Define types
+type BalloonData = [number, number, number]; // [latitude, longitude, altitude]
+
+type FormattedBalloon = {
+  id: number;
+  latitude: number;
+  longitude: number;
+  altitude: number;
+};
+
 // Sample data from the API response
-const SAMPLE_DATA = [
+const SAMPLE_DATA: BalloonData[] = [
   [-0.8234947986247869, 172.81706041445517, 3.6808595556242256],
   [50.813010401735646, 141.85201829486707, 3.369649522061529],
   [72.66130077522725, 108.53954442453075, 17.35895906484483],
@@ -16,7 +26,7 @@ const SAMPLE_DATA = [
   [-3.4126363322169935, 114.54269440305465, 9.604115072197002]
 ];
 
-const formatData = (data) => {
+const formatData = (data: BalloonData[]): FormattedBalloon[] => {
   return data.map((balloon, index) => ({
     id: index + 1,
     latitude: balloon[0],
@@ -26,38 +36,33 @@ const formatData = (data) => {
 };
 
 const WindBorneDashboard = () => {
-  const [constellationData, setConstellationData] = useState(() => formatData(SAMPLE_DATA));
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [constellationData, setConstellationData] = useState<FormattedBalloon[]>(() => formatData(SAMPLE_DATA));
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Using a proxy or direct fetch depending on environment
         const response = await fetch('/api/balloons');
         
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
         
-        const data = await response.json();
+        const data: BalloonData[] = await response.json();
         setConstellationData(formatData(data));
         setError(null);
       } catch (err) {
-        console.log('Using sample data due to:', err.message);
-        // Keep using the sample data that was set initially
+        console.log('Using sample data due to:', err instanceof Error ? err.message : 'Unknown error');
         setError('Using sample data for demonstration purposes.');
       } finally {
         setLoading(false);
       }
     };
 
-    // Initial fetch
     fetchData();
-
-    // Set up polling
     const interval = setInterval(fetchData, 300000);
     return () => clearInterval(interval);
   }, []);
@@ -152,7 +157,7 @@ const WindBorneDashboard = () => {
                     cursor={{ strokeDasharray: '3 3' }}
                     content={({ payload }) => {
                       if (!payload || !payload[0]) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0].payload as FormattedBalloon;
                       return (
                         <div className="bg-white p-2 border rounded shadow">
                           <p className="font-medium">Balloon #{data.id}</p>
@@ -198,7 +203,7 @@ const WindBorneDashboard = () => {
                     cursor={{ strokeDasharray: '3 3' }}
                     content={({ payload }) => {
                       if (!payload || !payload[0]) return null;
-                      const data = payload[0].payload;
+                      const data = payload[0].payload as FormattedBalloon;
                       return (
                         <div className="bg-white p-2 border rounded shadow">
                           <p className="font-medium">Balloon #{data.id}</p>
